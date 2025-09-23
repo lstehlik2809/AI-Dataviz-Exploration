@@ -10,6 +10,3 @@ langgraph
 scipy
 scikit-learn
 statsmodels
-math
-
-
