@@ -20,4 +20,6 @@ It usually provides good outputs even when you use really simple plain language 
 
 Happy exploring 🕵️‍♀️
 
-P.S. As usual, genAI can make mistakes, so don’t trust the outputs blindly - always double-check 😉
+P.S. Since the app is hosted on Streamlit Community Cloud, it doesn’t stay awake continuously. If it hasn’t been used recently, you may need to wake it up and wait a few minutes.
+
+P.P.S. As usual, genAI can make mistakes, so don’t trust the outputs blindly - always double-check 😉
