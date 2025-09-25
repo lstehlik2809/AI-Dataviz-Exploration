@@ -3,12 +3,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import io
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, END
 import math
+
+# Helper: convert fig -> PNG bytes
+def fig_to_png_bytes(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight")
+    buf.seek(0)
+    return buf.read()
+
 
 # ==============
 # 0) Streamlit setup
@@ -385,13 +394,16 @@ app = workflow.compile()
 # ==============
 # 7) Streamlit integration
 # ==============
+if "viz_result" not in st.session_state:
+    st.session_state.viz_result = None
+
 if df is not None and instructions and st.button("Generate Visualization"):
     schema_str = ", ".join(f"{col}:{dtype}" for col, dtype in df.dtypes.items())
 
     state: VizState = {
         "schema": schema_str,
         "instructions": instructions,
-        "data_context": data_context,  # already hard-coded above
+        "data_context": data_context,
         "df": df,
         "plan": None,
         "code": None,
@@ -406,30 +418,24 @@ if df is not None and instructions and st.button("Generate Visualization"):
 
     result = app.invoke(state)
 
-    # --- HIDE THESE FROM THE WEB UI (keep for future use) ---
-    # if result["plan"]:
-    #     with st.expander("📝 Plan"):
-    #         st.code(result["plan"], language="markdown")
-
-    # if result["code"]:
-    #     with st.expander("⚙️ Final Code"):
-    #         st.code(result["code"], language="python")
-
-    # if result["narrative_code"]:
-    #     with st.expander("📜 Narrative Code"):
-    #         st.code(result["narrative_code"], language="python")
-
-    # if result["narrative_text"]:
-    #     with st.expander("📖 Narrative Text"):
-    #         st.write(result["narrative_text"])
-    # --- END HIDDEN BLOCKS ---
-
+    # 🔑 Convert fig to PNG bytes if it exists
     if result["fig"]:
-        st.pyplot(result["fig"], clear_figure=True, use_container_width=False)
+        result["fig_png"] = fig_to_png_bytes(result["fig"])
+    else:
+        result["fig_png"] = None
 
-    if result["explanation"]:
+    st.session_state.viz_result = result
+
+# ---- Show persisted results (if any) ----
+if st.session_state.viz_result:
+    result = st.session_state.viz_result
+
+    if result.get("fig_png"):
+        st.image(result["fig_png"], use_container_width=True)
+
+    if result.get("explanation"):
         st.subheader("💡 Explanation")
         st.write(result["explanation"])
 
-    if result["error"]:
+    if result.get("error"):
         st.error(f"Execution still failing: {result['error']}")
