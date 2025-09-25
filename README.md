@@ -6,7 +6,7 @@ It’s a simple agentic app for plain-language exploration of a dataset from Cul
 
 It consists of several agents (powered by the ChatGPT-5-mini model for inference), each responsible for a different aspect of the insight-generation process and using inputs from other agents:
 
-* One agent plans the analysis steps based on the user’s request, data characteristics, and broader context,
+* one agent plans the analysis steps based on the user’s request, data characteristics, and broader context,
 * another turns this plan into runnable code,
 * another fixes potential errors in the code based on error messages,
 * another creates code for accompanying analyses to support explanation of the dataviz,
