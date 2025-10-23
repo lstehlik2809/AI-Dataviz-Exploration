@@ -18,7 +18,6 @@ def fig_to_png_bytes(fig):
     buf.seek(0)
     return buf.read()
 
-
 # ==============
 # 0) Streamlit setup
 # ==============
@@ -37,7 +36,7 @@ st.markdown(
 )
 
 
-# --- Keep API key as is (note: hard-coding keys is risky in production) ---
+# --- Load API key ---
 # for local dev
 # from dotenv import load_dotenv
 # import os
@@ -53,34 +52,17 @@ if not api_key or not api_key.startswith("sk-"):
 # ==============
 # 1) Models
 # ==============
-llm_plan = ChatOpenAI(
-    model="gpt-5-mini",
-    temperature=1,
-    openai_api_key=api_key
-)
+model="gpt-5-mini"
 
-llm_exec = ChatOpenAI(
-    model="gpt-5-mini",
-    temperature=1,
-    openai_api_key=api_key
-)
-
-llm_narrative = ChatOpenAI(
-    model="gpt-5-mini",
-    temperature=1,
-    openai_api_key=api_key
-)
-
-llm_explainer = ChatOpenAI(
-    model="gpt-5-mini",
-    temperature=1,
-    openai_api_key=api_key
-)
+llm_plan = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
+llm_exec = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
+llm_narrative = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
+llm_explainer = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
 
 # ==============
-# 2) Data source (hard-coded single CSV, no upload)
+# 2) Data source (hard-coded)
 # ==============
-CSV_PATH = "culturex_corporate_culture_data.csv"   
+CSV_PATH = "culturex_corporate_culture_data.csv"
 
 try:
     df = pd.read_csv(CSV_PATH)
@@ -89,7 +71,6 @@ try:
     total_rows = len(df)
     total_pages = max(1, math.ceil(total_rows / page_size))
 
-    # simple pagination control (no slider)
     page = st.number_input("Page number", min_value=1, max_value=total_pages, value=1, step=1)
     start = (page - 1) * page_size
     end = start + page_size
@@ -104,7 +85,7 @@ except Exception as e:
     st.stop()
 
 # ==============
-# 2a) Hard-coded dataset context (hidden from UI)
+# 2a) Data context
 # ==============
 DATA_CONTEXT = """
 The data show companies' scores on corporate culture values as measured through anonymous Glassdoor reviews. 
@@ -112,7 +93,7 @@ The scores are on z-score scale.
 The toxic culture scores were already reverse-coded.
 The data include columns with company name, company description, and industry, and the following culture dimensions: work-life balance, transparency, toxic culture, supportive culture, strategy, leadership, innovation, open to feedback, and agility.
 """
-data_context = DATA_CONTEXT  # <-- used internally; no UI element
+data_context = DATA_CONTEXT
 
 instructions = st.text_area(
     "Enter your question or instructions for data visualization:",
@@ -120,7 +101,7 @@ instructions = st.text_area(
 )
 
 # ==============
-# 3) Shared state for LangGraph
+# 3) Shared state
 # ==============
 class VizState(TypedDict):
     schema: str
@@ -138,7 +119,7 @@ class VizState(TypedDict):
     retry_count_narrative: int
 
 # ==============
-# 4) Helper to run code safely
+# 4) Helper functions
 # ==============
 def run_exec(code: str, df: pd.DataFrame) -> plt.Figure:
     safe_code = (
@@ -156,14 +137,19 @@ def run_narrative(code: str, df: pd.DataFrame) -> str:
     return exec_env["narrative"]
 
 # ==============
-# 5) Nodes with spinners
+# 5) Nodes
 # ==============
 def planner_node(state: VizState) -> VizState:
     with st.spinner("📝 Generating plan..."):
         plan_msg = llm_plan.invoke(f"""
-            Dataset schema: {state['schema']}
-            Dataset context: {state['data_context']}
-            User request: {state['instructions']}
+            Dataset schema: 
+            {state['schema']}
+            
+            Dataset context: 
+            {state['data_context']}
+            
+            User request: 
+            {state['instructions']}
 
             Task: Break down the steps for both data wrangling (pandas) and visualization (seaborn + matplotlib) that would fulfill the user’s request - for example, creating a data visualization, answering a question, providing insights, or helping test a hypothesis.
             Requirements:
@@ -178,6 +164,39 @@ def planner_node(state: VizState) -> VizState:
             """)
         state["plan"] = plan_msg.content
     return state
+
+def reflection_node(state: VizState) -> VizState:
+    with st.spinner("🪞 Reflecting on plan quality..."):
+        reflection_msg = llm_plan.invoke(f"""
+            Dataset schema:
+            {state['schema']}
+
+            Dataset context:
+            {state['data_context']}
+
+            User request:
+            "{state['instructions']}"
+
+            Initial analysis and visualization plan:
+            ```
+            {state['plan']}
+            ```
+
+            Task:
+            Critically reflect on the quality and appropriateness of this plan.
+            - Check whether the plan aligns well with the user's request.
+            - Verify if the visualization types are appropriate for the dataset schema.
+            - Check if variable selections make sense and are valid according to the schema.
+            - Evaluate whether the plan is logically coherent and sufficient to answer the question.
+            - Identify missing steps (e.g., grouping, aggregation, filtering, labeling, clarity).
+            - If the plan is already strong, affirm that.
+            - If improvements are needed, rewrite the plan to make it stronger.
+
+            Output only the final, improved plan (no explanations).
+        """)
+        state["plan"] = reflection_msg.content.strip()
+    return state
+
 
 class ExecCode(BaseModel):
     code: str
@@ -439,3 +458,7 @@ if st.session_state.viz_result:
 
     if result.get("error"):
         st.error(f"Execution still failing: {result['error']}")
+
+
+
+    
