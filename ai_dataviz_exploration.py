@@ -372,11 +372,12 @@ def explainer_node(state: VizState) -> VizState:
     return state
 
 # ==============
-# 6) Build the workflow graph
+# 6) Workflow Graph
 # ==============
 workflow = StateGraph(VizState)
 
 workflow.add_node("planner", planner_node)
+workflow.add_node("reflection", reflection_node)  
 workflow.add_node("executor", executor_node)
 workflow.add_node("repair_exec", repair_exec_node)
 workflow.add_node("narrative", narrative_node)
@@ -384,7 +385,8 @@ workflow.add_node("repair_narrative", repair_narrative_node)
 workflow.add_node("explainer", explainer_node)
 
 workflow.set_entry_point("planner")
-workflow.add_edge("planner", "executor")
+workflow.add_edge("planner", "reflection")  
+workflow.add_edge("reflection", "executor")  
 
 workflow.add_conditional_edges(
     "executor",
