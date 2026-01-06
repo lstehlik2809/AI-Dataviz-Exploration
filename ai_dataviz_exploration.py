@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
+import json
 
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, END
@@ -17,6 +18,23 @@ def fig_to_png_bytes(fig):
     fig.savefig(buf, format="png", bbox_inches="tight")
     buf.seek(0)
     return buf.read()
+
+# Helper: extract text from Gemini response content
+def extract_text_from_content(content):
+    """Extract text from Gemini's response content which can be a string, list, or list of dicts."""
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        texts = []
+        for item in content:
+            if isinstance(item, str):
+                texts.append(item)
+            elif isinstance(item, dict) and 'text' in item:
+                texts.append(item['text'])
+            elif hasattr(item, 'text'):
+                texts.append(item.text)
+        return "".join(texts)
+    return str(content)
 
 # ==============
 # 0) Streamlit setup
@@ -35,29 +53,28 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # --- Load API key ---
 # for local dev
 # from dotenv import load_dotenv
 # import os
 # load_dotenv()  
-# api_key = os.getenv("OPENAI_API_KEY")
+# api_key = os.getenv("GEMINI_API_KEY")
 # for deployment (e.g., Streamlit Cloud)
-api_key = st.secrets.get("OPENAI_API_KEY")
+api_key = st.secrets.get("GEMINI_API_KEY")
 
-if not api_key or not api_key.startswith("sk-"):
-    st.warning("Please provide a valid OpenAI API key in st.secrets as OPENAI_API_KEY to continue.")
+if not api_key or not api_key.startswith("AIza"):
+    st.warning("Please provide a valid Gemini API key in st.secrets as GEMINI_API_KEY to continue.")
     st.stop()
 
 # ==============
 # 1) Models
 # ==============
-model="gpt-5-mini"
+model="gemini-3-flash-preview"
 
-llm_plan = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
-llm_exec = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
-llm_narrative = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
-llm_explainer = ChatOpenAI(model=model, temperature=1, openai_api_key=api_key)
+llm_plan = ChatGoogleGenerativeAI(model=model, temperature=1, google_api_key=api_key)
+llm_exec = ChatGoogleGenerativeAI(model=model, temperature=1, google_api_key=api_key)
+llm_narrative = ChatGoogleGenerativeAI(model=model, temperature=1, google_api_key=api_key)
+llm_explainer = ChatGoogleGenerativeAI(model=model, temperature=1, google_api_key=api_key)
 
 # ==============
 # 2) Data source (hard-coded)
@@ -162,7 +179,7 @@ def planner_node(state: VizState) -> VizState:
             - Apply good data visualization principles: choose the right chart for the data, keep visuals clear and uncluttered, label everything, use accessible colors, highlight the key insight, and avoid distortion or chartjunk.
             - When the user's request contains specific company names or industries, correct potential typos and then use key-word search to find relevant companies or industries in the dataset as people may misspell them.
             """)
-        state["plan"] = plan_msg.content
+        state["plan"] = extract_text_from_content(plan_msg.content)
     return state
 
 def reflection_node(state: VizState) -> VizState:
@@ -194,7 +211,7 @@ def reflection_node(state: VizState) -> VizState:
 
             Output only the final, improved plan (no explanations).
         """)
-        state["plan"] = reflection_msg.content.strip()
+        state["plan"] = extract_text_from_content(reflection_msg.content).strip()
     return state
 
 
@@ -368,7 +385,7 @@ def explainer_node(state: VizState) -> VizState:
             - Make it concise and clear.
             - Do not output code. Write only text.
         """)
-        state["explanation"] = explain_msg.content.strip()
+        state["explanation"] = extract_text_from_content(explain_msg.content).strip()
     return state
 
 # ==============
@@ -377,7 +394,7 @@ def explainer_node(state: VizState) -> VizState:
 workflow = StateGraph(VizState)
 
 workflow.add_node("planner", planner_node)
-workflow.add_node("reflection", reflection_node)  
+workflow.add_node("reflection", reflection_node) 
 workflow.add_node("executor", executor_node)
 workflow.add_node("repair_exec", repair_exec_node)
 workflow.add_node("narrative", narrative_node)
