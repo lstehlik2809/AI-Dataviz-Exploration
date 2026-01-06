@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
-import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel
