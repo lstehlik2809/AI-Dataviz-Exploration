@@ -4,7 +4,7 @@ Sharing an output from my experimentation with agentic AI for data insights demo
 
 It’s a simple agentic app for plain-language exploration of a dataset from CultureX, containing corporate culture values across companies from different industries, measured through anonymous Glassdoor reviews between Jan 1, 2023, and Apr 4, 2025.
 
-It consists of several agents (powered by the ChatGPT-5-mini model for inference), each responsible for a different aspect of the insight-generation process and using inputs from other agents:
+It consists of several agents (powered by the GPT-5-mini model for inference), each responsible for a different aspect of the insight-generation process and using inputs from other agents:
 
 * one agent plans the analysis steps based on the user’s request, data characteristics, and broader context,
 * another turns this plan into runnable code,
