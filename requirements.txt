@@ -5,9 +5,7 @@ seaborn
 streamlit
 langchain-google-genai
 pydantic
-typing
 langgraph
 scipy
 scikit-learn
 statsmodels
-math
