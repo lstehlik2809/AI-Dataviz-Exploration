@@ -83,16 +83,34 @@ CSV_PATH = "culturex_corporate_culture_data.csv"
 try:
     df = pd.read_csv(CSV_PATH)
     st.subheader("📄 Data Overview")
+    
+    # Pagination Logic
     page_size = 5
     total_rows = len(df)
     total_pages = max(1, math.ceil(total_rows / page_size))
 
-    page = st.number_input("Page number", min_value=1, max_value=total_pages, value=1, step=1)
+    col1, col2 = st.columns([1, 3]) # Optional: Layout for controls
+    with col1:
+        page = st.number_input("Page number", min_value=1, max_value=total_pages, value=1, step=1)
+    
     start = (page - 1) * page_size
     end = start + page_size
 
     st.caption(f"Showing rows {start+1}–{min(end, total_rows)} of {total_rows} (page {page} of {total_pages})")
+    
+    # Display the SLICED dataframe (Visual only)
     st.dataframe(df.iloc[start:end], use_container_width=True)
+
+    # Download Button for FULL Data
+    csv = df.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        label="📥 Download full dataset as CSV",
+        data=csv,
+        file_name='culturex_data_full.csv',
+        mime='text/csv',
+    )
+
 except FileNotFoundError:
     st.error(f"CSV not found at: {CSV_PATH}")
     st.stop()
