@@ -39,7 +39,7 @@ def extract_text_from_content(content):
 # 0) Streamlit setup
 # ==============
 st.set_page_config(page_title="AI Data Viz Assistant", layout="wide")
-st.title("📊 AI-Powered Visual Exploration of Corporate Culture Data")
+st.title("AI-Powered Visual Exploration of Corporate Culture Data")
 st.markdown(
     """
     <p style="font-size:1.1rem; margin-top:-0.25rem;">
