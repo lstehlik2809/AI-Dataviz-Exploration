@@ -1,26 +1,28 @@
 # AI-Dataviz-Exploration
 
-Sharing an output from my experimentation with agentic AI for data insights democratization.
+An agentic app for plain-language exploration of corporate culture data. Ask a question in everyday language, and a team of AI agents will plan the analysis, generate the visualization, and explain the findings — all in a few seconds.
 
-It’s a simple agentic app for plain-language exploration of a dataset from CultureX, containing corporate culture values across companies from different industries, measured through anonymous Glassdoor reviews between Jan 1, 2023, and Apr 4, 2025.
+It runs on a public dataset from [CultureX](https://www.culturex.com/) with corporate culture scores across companies in different industries, measured through anonymous Glassdoor reviews between Jan 1, 2023, and Apr 4, 2025.
 
-It consists of several agents (powered by the GPT-5-mini model for inference), each responsible for a different aspect of the insight-generation process and using inputs from other agents:
+## How it works
+The app uses several AI agents (powered by Google's Gemini 3 Flash Preview), each responsible for a different step:
 
-* one agent plans the analysis steps based on the user’s request, data characteristics, and broader context,
-* another turns this plan into runnable code,
-* another fixes potential errors in the code based on error messages,
-* another creates code for accompanying analyses to support explanation of the dataviz,
-* and another transforms everything into a concise, clear narrative for a non-technical audience.
+* **Clarifier** — asks 2–3 sharpening questions to understand exactly what you want (which companies, which metrics, what chart type, etc.)
+* **Planner** — designs the analysis strategy based on your request and the data
+* **Critic** — reviews the plan and pushes back if something can be improved (up to 3 rounds)
+* **Executor** — turns the plan into runnable visualization code
+* **Narrative** — computes statistics and writes a data-driven summary
+* **Explainer** — synthesizes everything into a concise insight for a non-technical audience
 
-It runs on a public dataset from *CultureX* with corporate culture values across companies in different industries, measured through anonymous Glassdoor reviews between Jan 1, 2023, and Apr 4, 2025.
+## Conversational follow-ups
+After the initial analysis, you can ask up to 5 follow-up questions. The AI keeps full context from previous turns — including your answers to sharpening questions — so it builds on what it already knows rather than starting from scratch. Hit ``✨ New Analysis`` to start a fresh exploration.
 
-It usually provides good outputs even when you use really simple plain language - but based on my experiments, it helps if you know what kind of dataviz and insights you want and spell that out for the agents 😉
+## Tips
+It usually provides good outputs even with really simple plain language — but based on my experiments, it helps if you know what kind of dataviz and insights you want and spell that out for the agents 😉
 
 Happy exploring 🕵️‍♀️
 
-P.S. Since the app is hosted on Streamlit Community Cloud, it doesn’t stay awake continuously. If it hasn’t been used recently, you may need to wake it up and wait a few minutes.
-
-P.P.S. As usual, genAI can make mistakes, so don’t trust the outputs blindly - always double-check 😉
-
 ----
-**Update**: After Google's release of Gemini 3 Flash Preview, which demonstrates a superior performance-to-price ratio, I replaced GPT-5-mini with this model. Its higher "intelligence" is readily apparent in the quality of the app's outputs - specifically through better chart selection and more nuanced data interpretations. It's a perfect example of the ongoing commoditization of "intelligence."
+P.S. Since the app is hosted on Streamlit Community Cloud, it doesn't stay awake continuously. If it hasn't been used recently, you may need to wake it up and wait a few minutes.
+
+P.P.S. As usual, genAI can make mistakes, so don't trust the outputs blindly — always double-check 😉
