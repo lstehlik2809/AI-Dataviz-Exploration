@@ -1,19 +1,18 @@
-# Performance & Core
+# Core
 numpy>=2.1.0
 pandas>=2.2.0
-scipy>=1.13.0
-statsmodels>=0.14.0
 
-# Visualization (The Fix)
+# Visualization
 streamlit>=1.41.0
-altair>=5.4.1
 matplotlib>=3.9.0
 seaborn>=0.13.0
 
-# AI Stack
-langchain-google-genai>=2.0.0
-pydantic>=2.10.0
-langgraph>=0.2.0
+# AI
+litellm>=1.40.0
+python-dotenv>=1.0.0
 
-# Machine Learning
+# Available to LLM-generated code at runtime
+# (the executor agent may import these for statistical analysis)
+scipy>=1.13.0
+statsmodels>=0.14.0
 scikit-learn>=1.5.0
